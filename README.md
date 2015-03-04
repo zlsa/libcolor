@@ -1,0 +1,2 @@
+# libcolor
+C color library
