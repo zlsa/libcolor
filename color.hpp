@@ -348,6 +348,76 @@ namespace Color
 		auto m=x.lightness() - 0.5f*chroma;
 		m_data+=vec4{m,m,m,0};
 		}
+	
+	
+	class HSVA
+		{
+		public:
+			explicit HSVA(SRGBA x)
+				{
+				auto temp=detail::mmch(x);
+				auto V=temp.M;
+				m_data[0]=temp.H;
+				m_data[1]=(V>0)?temp.C/V:0.0f;
+				m_data[2]=V;
+				m_data[3]=x.alpha();
+				}
+			
+			explicit HSVA(float hue,float saturation,float value,float alpha)
+				{
+				m_data[0]=hue;
+				m_data[1]=saturation;
+				m_data[2]=value;
+				m_data[3]=alpha;
+				}
+			
+			float hue() const noexcept
+				{return m_data[0];}
+			
+			float saturation() const noexcept
+				{return m_data[1];}
+				
+			float value() const noexcept
+				{return m_data[2];}
+			
+			float alpha() const noexcept
+				{return m_data[3];}
+				
+			HSVA& hue(float x) noexcept
+				{
+				m_data[0]=x;
+				return *this;
+				}
+		
+			HSVA& saturation(float x) noexcept
+				{
+				m_data[1]=x;
+				return *this;
+				}
+				
+			HSVA& value(float x) noexcept
+				{
+				m_data[2]=x;
+				return *this;
+				}
+			
+			HSVA& alpha(float x) noexcept
+				{
+				m_data[3]=x;
+				return *this;
+				}
+
+		private:
+			vec4 m_data;
+		};
+	
+	inline SRGBA::SRGBA(HSVA x) noexcept
+		{
+		auto chroma=x.value()*x.saturation();
+		*this=detail::from_hue_chroma_alpha(x.hue(),chroma,x.alpha());
+		auto m=x.value() - chroma;
+		m_data+=vec4{m,m,m,0};
+		}
 	}
 
 #endif
