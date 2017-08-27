@@ -15,9 +15,13 @@ int main()
 				Color::SRGBA test_a(float(k)/4.0f,float(l)/4.0f,float(m)/4.0f,1.0f);
 				Color::HCYpA test_b(test_a);
 				printf("(%.7f,%.7f,%.7f,%.7f) ",test_a.red(),test_a.green(),test_a.blue(),test_a.alpha());
-				Color::SRGBA test_c(test_b);
-				printf("(%.7f,%.7f,%.7f,%.7f) ",test_c.red(),test_c.green(),test_c.blue(),test_c.alpha());
-				printf("(%.7f,%.7f,%.7f,%.7f)",test_b.hue(),test_b.chroma(),test_b.luma(),test_b.alpha());
+			
+				test_a=Color::SRGBA(Color::HCYpA(test_a));
+				printf("(%.7f,%.7f,%.7f,%.7f) ",test_a.red(),test_a.green(),test_a.blue(),test_a.alpha());
+			
+				test_a=Color::SRGBA(Color::HSLA(test_a));
+				printf("(%.7f,%.7f,%.7f,%.7f) ",test_a.red(),test_a.green(),test_a.blue(),test_a.alpha());
+			
 				putchar('\n');
 				}
 			}
