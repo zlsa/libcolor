@@ -1,2 +1,3 @@
 # libcolor
-C color library
+
+C++ library for converting between color spaces.
