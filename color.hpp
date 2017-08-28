@@ -10,6 +10,7 @@ namespace Color
 	typedef float vec4 __attribute__ ((vector_size (16)));
 
 	class HCYpA;
+	class HCIA;
 	class HSLA;
 	class HSVA;
 	class RGBA;
@@ -22,6 +23,8 @@ namespace Color
 		public:
 			inline explicit RGBA(SRGBA x) noexcept;
 			inline explicit RGBA(XYZA x) noexcept;
+			inline explicit RGBA(HCIA x) noexcept;
+
 			
 			explicit RGBA(float r,float g,float b,float a) noexcept
 				{m_data=vec4{r,g,b,a};}
@@ -63,6 +66,9 @@ namespace Color
 				m_data[3]=val;
 				return *this;
 				}
+				
+			float intensity() const noexcept
+				{return (m_data[0] + m_data[1] + m_data[2])/3.0f;}
 			
 		private:
 			static inline float from_srgb(float x) noexcept;
@@ -244,8 +250,9 @@ namespace Color
 			};
 
 		static constexpr auto pi=std::acos(-1.0f);
-			
-		static MmCH mmch(SRGBA x)
+		
+		template<class T>
+		static MmCH mmch(T x) noexcept
 			{
 			auto ptr=reinterpret_cast<const float*>(&x);
 			auto offset_max=std::max_element(ptr,ptr + 3);
@@ -262,7 +269,7 @@ namespace Color
 			return {M,m,C,C>0?pi*hue_lut[offset_max - ptr]/3.0f:0.0f};
 			}
 		
-		static SRGBA from_hue_chroma_alpha(float hue,float chroma,float alpha)
+		static SRGBA srgba_from_hue_chroma_alpha(float hue,float chroma,float alpha) noexcept
 			{
 			assert(hue>=0 && hue<=2.0f*pi);
 			auto H=3.0f*hue/pi;
@@ -282,18 +289,39 @@ namespace Color
 				
 			return rgb_lut[static_cast<int>(H)];
 			}
+			
+		static RGBA rgba_from_hue_chroma_alpha(float hue,float chroma,float alpha) noexcept
+			{
+			assert(hue>=0 && hue<=2.0f*pi);
+			auto H=3.0f*hue/pi;
+			auto C=chroma;
+			auto X=chroma*(1.0f - std::abs(std::fmod(H,2) - 1.0f));
+			
+			RGBA rgb_lut[7]=
+				{
+				 RGBA(C,X,0,alpha)
+				,RGBA(X,C,0,alpha)
+				,RGBA(0,C,X,alpha)
+				,RGBA(0,X,C,alpha)
+				,RGBA(X,0,C,alpha)
+				,RGBA(C,0,X,alpha)
+				,RGBA(C,X,0,alpha) //So we can accept hue=2 pi without mod
+				};
+				
+			return rgb_lut[static_cast<int>(H)];
+			}
 		}
 		
 	class HCYpA
 		{
 		public:
-			explicit HCYpA(SRGBA x)
+			explicit HCYpA(SRGBA x) noexcept
 				{
 				auto temp=detail::mmch(x);
 				m_data=vec4{temp.H,temp.C,x.luma(),x.alpha()};
 				}
 			
-			explicit HCYpA(float hue,float chroma,float luma,float alpha)
+			explicit HCYpA(float hue,float chroma,float luma,float alpha) noexcept
 				{m_data=vec4{hue,chroma,luma,alpha};}
 			
 			float hue() const noexcept
@@ -339,8 +367,68 @@ namespace Color
 	
 	inline SRGBA::SRGBA(HCYpA x) noexcept
 		{
-		*this=detail::from_hue_chroma_alpha(x.hue(),x.chroma(),x.alpha());
+		*this=detail::srgba_from_hue_chroma_alpha(x.hue(),x.chroma(),x.alpha());
 		auto m=x.luma() - luma();
+		m_data+=vec4{m,m,m,0};
+		}
+		
+	class HCIA
+		{
+		public:
+			explicit HCIA(RGBA x)
+				{
+				auto temp=detail::mmch(x);
+				m_data=vec4{temp.H,temp.C,x.intensity(),x.alpha()};
+				}
+			
+			explicit HCIA(float hue,float chroma,float intensity,float alpha) noexcept
+				{m_data=vec4{hue,chroma,intensity,alpha};}
+			
+			float hue() const noexcept
+				{return m_data[0];}
+			
+			float chroma() const noexcept
+				{return m_data[1];}
+				
+			float intensity() const noexcept
+				{return m_data[2];}
+			
+			float alpha() const noexcept
+				{return m_data[3];}
+				
+			HCIA& hue(float x) noexcept
+				{
+				m_data[0]=x;
+				return *this;
+				}
+		
+			HCIA& chroma(float x) noexcept
+				{
+				m_data[1]=x;
+				return *this;
+				}
+				
+			HCIA& intensity(float x) noexcept
+				{
+				m_data[2]=x;
+				return *this;
+				}
+			
+			HCIA& alpha(float x) noexcept
+				{
+				m_data[3]=x;
+				return *this;
+				}
+
+			
+		private:
+			vec4 m_data;
+		};
+	
+	inline RGBA::RGBA(HCIA x) noexcept
+		{
+		*this=detail::rgba_from_hue_chroma_alpha(x.hue(),x.chroma(),x.alpha());
+		auto m=x.intensity() - intensity();
 		m_data+=vec4{m,m,m,0};
 		}
 		
@@ -404,7 +492,7 @@ namespace Color
 	inline SRGBA::SRGBA(HSLA x) noexcept
 		{
 		auto chroma=(1.0f - std::abs(2*x.lightness() - 1.0f) )*x.saturation();
-		*this=detail::from_hue_chroma_alpha(x.hue(),chroma,x.alpha());
+		*this=detail::srgba_from_hue_chroma_alpha(x.hue(),chroma,x.alpha());
 		auto m=x.lightness() - 0.5f*chroma;
 		m_data+=vec4{m,m,m,0};
 		}
@@ -474,7 +562,7 @@ namespace Color
 	inline SRGBA::SRGBA(HSVA x) noexcept
 		{
 		auto chroma=x.value()*x.saturation();
-		*this=detail::from_hue_chroma_alpha(x.hue(),chroma,x.alpha());
+		*this=detail::srgba_from_hue_chroma_alpha(x.hue(),chroma,x.alpha());
 		auto m=x.value() - chroma;
 		m_data+=vec4{m,m,m,0};
 		}
