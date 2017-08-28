@@ -142,7 +142,7 @@ namespace Color
 		for(int k=0;k<4;++k)
 			{
 			auto vals=M[k]*v;
-			m_data[k]=static_cast<float>( vals[0]+vals[1]+vals[2]+vals[3] );
+			m_data[k]=vals[0]+vals[1]+vals[2]+vals[3];
 			}
 		}
 
