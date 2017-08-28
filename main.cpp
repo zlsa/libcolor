@@ -25,6 +25,9 @@ int main()
 				test_a=Color::SRGBA(Color::HSVA(test_a));
 				printf("(%.6f,%.6f,%.6f,%.6f)\n",test_a.red(),test_a.green(),test_a.blue(),test_a.alpha());
 				
+				test_a=Color::SRGBA(Color::YpCbCrA(test_a));
+				printf("(%.6f,%.6f,%.6f,%.6f)\n",test_a.red(),test_a.green(),test_a.blue(),test_a.alpha());
+				
 				putchar('\n');
 				}
 			}
