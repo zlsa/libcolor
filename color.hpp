@@ -211,19 +211,11 @@ namespace Color
 			explicit HCYpA(SRGBA x)
 				{
 				auto temp=detail::mmch(x);
-				m_data[0]=temp.H;
-				m_data[1]=temp.C;
-				m_data[2]=x.luma();
-				m_data[3]=x.alpha();
+				m_data=vec4{temp.H,temp.C,x.luma(),x.alpha()};
 				}
 			
 			explicit HCYpA(float hue,float chroma,float luma,float alpha)
-				{
-				m_data[0]=hue;
-				m_data[1]=chroma;
-				m_data[2]=luma;
-				m_data[3]=alpha;
-				}
+				{m_data=vec4{hue,chroma,luma,alpha};}
 			
 			float hue() const noexcept
 				{return m_data[0];}
@@ -287,12 +279,7 @@ namespace Color
 				}
 			
 			explicit HSLA(float hue,float saturation,float lightness,float alpha)
-				{
-				m_data[0]=hue;
-				m_data[1]=saturation;
-				m_data[2]=lightness;
-				m_data[3]=alpha;
-				}
+				{m_data=vec4{hue,saturation,lightness,alpha};}
 			
 			float hue() const noexcept
 				{return m_data[0];}
