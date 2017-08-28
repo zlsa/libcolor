@@ -9,25 +9,20 @@ namespace Color
 	{
 	typedef float vec4 __attribute__ ((vector_size (16)));
 
-    class HCYpA;
-    class HSLA;
-    class HSVA;
-    class RGBA;
-    class SRGBA;
-    class YpCbCrA;
+	class HCYpA;
+	class HSLA;
+	class HSVA;
+	class RGBA;
+	class SRGBA;
+	class YpCbCrA;
 
 	class RGBA
 		{
 		public:
-            inline explicit RGBA(SRGBA x) noexcept;
+			inline explicit RGBA(SRGBA x) noexcept;
 			
 			explicit RGBA(float r,float g,float b,float a) noexcept
-				{
-				m_data[0]=r;
-				m_data[1]=g;
-				m_data[2]=b;
-				m_data[3]=a;
-				}
+				{m_data=vec4{r,g,b,a};}
 			
 			RGBA()=default;
 			
@@ -72,16 +67,16 @@ namespace Color
 			vec4 m_data;
 		};
 
-    class SRGBA
+	class SRGBA
 		{
 		public:
 			inline explicit SRGBA(HSLA x) noexcept;
 			inline explicit SRGBA(HCYpA x) noexcept;
 			inline explicit SRGBA(HSVA x) noexcept;
 
-            explicit SRGBA(RGBA x) noexcept:
-	            SRGBA(to_srgb(x.red()),to_srgb(x.green()),to_srgb(x.blue()),x.alpha())
-                {}
+			explicit SRGBA(RGBA x) noexcept:
+				SRGBA(to_srgb(x.red()),to_srgb(x.green()),to_srgb(x.blue()),x.alpha())
+				{}
 
 			inline explicit SRGBA(YpCbCrA x) noexcept;
 			
