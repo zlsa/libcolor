@@ -14,12 +14,14 @@ namespace Color
 	class HSVA;
 	class RGBA;
 	class SRGBA;
+	class XYZA;
 	class YpCbCrA;
 
 	class RGBA
 		{
 		public:
 			inline explicit RGBA(SRGBA x) noexcept;
+			inline explicit RGBA(XYZA x) noexcept;
 			
 			explicit RGBA(float r,float g,float b,float a) noexcept
 				{m_data=vec4{r,g,b,a};}
@@ -66,6 +68,83 @@ namespace Color
 			static inline float from_srgb(float x) noexcept;
 			vec4 m_data;
 		};
+		
+	class XYZA
+		{
+		public:
+			explicit XYZA(RGBA x) noexcept
+				{
+				vec4 M[4]=
+					{
+					 vec4{0.4124564f,0.3575761f,0.1804375f,0.0f}
+					,vec4{0.2126729f,0.7151522f,0.0721750f,0.0f}
+					,vec4{0.0193339f,0.1191920f,0.9503041f,0.0f}
+					,vec4{0.0,0.0f,0.0f,1.0f}
+					};
+				auto v=reinterpret_cast<const vec4&>(x);
+				for(int k=0;k<4;++k)
+					{
+					auto vals=M[k]*v;
+					m_data[k]=vals[0]+vals[1]+vals[2]+vals[3];
+					}
+				}
+			
+			float x() const noexcept
+				{return m_data[0];}
+				
+			float y() const noexcept
+				{return m_data[1];}
+				
+			float z() const noexcept
+				{return m_data[2];}
+			
+			float alpha() const noexcept
+				{return m_data[3];}
+				
+			XYZA& x(float val) noexcept
+				{
+				m_data[0]=val;
+				return *this;
+				}
+				
+			XYZA& y(float val) noexcept
+				{
+				m_data[1]=val;
+				return *this;
+				}
+				
+			XYZA& z(float val) noexcept
+				{
+				m_data[2]=val;
+				return *this;
+				}
+			
+			XYZA& alpha(float val) noexcept
+				{
+				m_data[3]=val;
+				return *this;
+				}
+			
+		private:
+			vec4 m_data;
+		};
+		
+	inline RGBA::RGBA(XYZA x) noexcept
+		{
+		vec4 M[4]=
+			{
+			 vec4{3.24045483602141e+00f,-1.53713885010258e+00f,-4.98531546868481e-01f,0.0f}
+			,vec4{-9.69266389875654e-01f,1.87601092884249e+00f,4.15560823466735e-02f,0.0f}
+			,vec4{5.56434196042137e-02f,-2.04025854267698e-01f,1.05722516245793e+00f,0.0f}
+			,vec4{0.0,0.0f,0.0f,1.0f}
+			};
+		auto v=reinterpret_cast<const vec4&>(x);
+		for(int k=0;k<4;++k)
+			{
+			auto vals=M[k]*v;
+			m_data[k]=static_cast<float>( vals[0]+vals[1]+vals[2]+vals[3] );
+			}
+		}
 
 	class SRGBA
 		{
