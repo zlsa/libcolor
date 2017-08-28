@@ -475,7 +475,7 @@ namespace Color
 		
 	inline SRGBA::SRGBA(YpCbCrA x) noexcept
 		{
-		auto temp=reinterpret_cast<vec4&>(x); //I want to it as a vec4!
+		auto temp=reinterpret_cast<vec4&>(x); //I want to use it as a vec4!
 		temp-=vec4{0.0f,0.5f,0.5f,0.0f};
 		
 		auto v=vec4
