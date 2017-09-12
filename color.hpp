@@ -9,14 +9,15 @@ namespace Color
 	{
 	typedef float vec4 __attribute__ ((vector_size (16)));
 
-	class HCYpA;
+	class HCYA;
 	class HCIA;
 	class HSLA;
 	class HSVA;
 	class RGBA;
 	class SRGBA;
 	class XYZA;
-	class YpCbCrA;
+	
+	static constexpr vec4 s_luma_weights={0.2126729f,0.7151522f,0.0721750f,0.0f};
 
 	class RGBA
 		{
@@ -24,8 +25,8 @@ namespace Color
 			inline explicit RGBA(SRGBA x) noexcept;
 			inline explicit RGBA(XYZA x) noexcept;
 			inline explicit RGBA(HCIA x) noexcept;
+			inline explicit RGBA(HCYA x) noexcept;
 
-			
 			explicit RGBA(float r,float g,float b,float a) noexcept
 				{m_data=vec4{r,g,b,a};}
 			
@@ -69,6 +70,12 @@ namespace Color
 				
 			float intensity() const noexcept
 				{return (m_data[0] + m_data[1] + m_data[2])/3.0f;}
+				
+			float luma() const noexcept
+				{
+				auto temp=m_data*s_luma_weights;
+				return temp[0] + temp[1] + temp[2] + temp[3];
+				}
 			
 		private:
 			static inline float from_srgb(float x) noexcept;
@@ -83,7 +90,7 @@ namespace Color
 				vec4 M[4]=
 					{
 					 vec4{0.4124564f,0.3575761f,0.1804375f,0.0f}
-					,vec4{0.2126729f,0.7151522f,0.0721750f,0.0f}
+					,s_luma_weights
 					,vec4{0.0193339f,0.1191920f,0.9503041f,0.0f}
 					,vec4{0.0,0.0f,0.0f,1.0f}
 					};
@@ -156,14 +163,11 @@ namespace Color
 		{
 		public:
 			inline explicit SRGBA(HSLA x) noexcept;
-			inline explicit SRGBA(HCYpA x) noexcept;
 			inline explicit SRGBA(HSVA x) noexcept;
 
 			explicit SRGBA(RGBA x) noexcept:
 				SRGBA(to_srgb(x.red()),to_srgb(x.green()),to_srgb(x.blue()),x.alpha())
 				{}
-
-			inline explicit SRGBA(YpCbCrA x) noexcept;
 			
 			explicit SRGBA(float r,float g,float b,float a) noexcept
 				{m_data=vec4{r,g,b,a};}
@@ -205,17 +209,6 @@ namespace Color
 				m_data[3]=val;
 				return *this;
 				}
-				
-			float luma() const noexcept
-				{
-				vec4 weights{Kr,0.7152f,0.0722f,0.0f};
-				auto temp=m_data*weights;
-				return temp[0] + temp[1] + temp[2] + temp[3];
-				}
-			
-			static constexpr auto Kr=0.2126f;
-			static constexpr auto Kg=0.7152f;
-			static constexpr auto Kb=0.0722f;
 			
 		private:
 			static float to_srgb(float x) noexcept
@@ -312,16 +305,16 @@ namespace Color
 			}
 		}
 		
-	class HCYpA
+	class HCYA
 		{
 		public:
-			explicit HCYpA(SRGBA x) noexcept
+			explicit HCYA(RGBA x) noexcept
 				{
 				auto temp=detail::mmch(x);
 				m_data=vec4{temp.H,temp.C,x.luma(),x.alpha()};
 				}
 			
-			explicit HCYpA(float hue,float chroma,float luma,float alpha) noexcept
+			explicit HCYA(float hue,float chroma,float luma,float alpha) noexcept
 				{m_data=vec4{hue,chroma,luma,alpha};}
 			
 			float hue() const noexcept
@@ -336,25 +329,25 @@ namespace Color
 			float alpha() const noexcept
 				{return m_data[3];}
 				
-			HCYpA& hue(float x) noexcept
+			HCYA& hue(float x) noexcept
 				{
 				m_data[0]=x;
 				return *this;
 				}
 		
-			HCYpA& chroma(float x) noexcept
+			HCYA& chroma(float x) noexcept
 				{
 				m_data[1]=x;
 				return *this;
 				}
 				
-			HCYpA& luma(float x) noexcept
+			HCYA& luma(float x) noexcept
 				{
 				m_data[2]=x;
 				return *this;
 				}
 			
-			HCYpA& alpha(float x) noexcept
+			HCYA& alpha(float x) noexcept
 				{
 				m_data[3]=x;
 				return *this;
@@ -365,9 +358,9 @@ namespace Color
 			vec4 m_data;
 		};
 	
-	inline SRGBA::SRGBA(HCYpA x) noexcept
+	inline RGBA::RGBA(HCYA x) noexcept
 		{
-		*this=detail::srgba_from_hue_chroma_alpha(x.hue(),x.chroma(),x.alpha());
+		*this=detail::rgba_from_hue_chroma_alpha(x.hue(),x.chroma(),x.alpha());
 		auto m=x.luma() - luma();
 		m_data+=vec4{m,m,m,0};
 		}
@@ -565,77 +558,6 @@ namespace Color
 		*this=detail::srgba_from_hue_chroma_alpha(x.hue(),chroma,x.alpha());
 		auto m=x.value() - chroma;
 		m_data+=vec4{m,m,m,0};
-		}
-	
-	class YpCbCrA
-		{
-		public:
-			explicit YpCbCrA(SRGBA x) noexcept
-				{
-				auto Yp=x.luma();
-				auto Pb=0.5f*(x.blue() - Yp)/(1.0f - x.Kb);
-				auto Pr=0.5f*(x.red() - Yp)/(1.0f - x.Kr);
-				m_data=vec4{Yp,Pb,Pr,x.alpha()} + vec4{0.0f,0.5f,0.5f,0.0f};
-				}
-			
-			explicit YpCbCrA(float luma,float cb,float cr,float alpha)
-				{m_data=vec4{luma,cb,cr,alpha};}
-			
-			float luma() const noexcept
-				{return m_data[0];}
-			
-			float cb() const noexcept
-				{return m_data[1];}
-			
-			float cr() const noexcept
-				{return m_data[2];}
-			
-			float alpha() const noexcept
-				{return m_data[3];}
-
-				
-			YpCbCrA& luma(float x) noexcept
-				{
-				m_data[0]=x;
-				return *this;
-				}
-			
-			YpCbCrA& cb(float x) noexcept
-				{
-				m_data[1]=x;
-				return *this;
-				}
-			
-			YpCbCrA& cr(float x) noexcept
-				{
-				m_data[1]=x;
-				return *this;
-				}
-			
-			YpCbCrA& alpha(float x) noexcept
-				{
-				m_data[3]=x;
-				return *this;
-				}
-				
-		private:
-			vec4 m_data;
-		};
-		
-	inline SRGBA::SRGBA(YpCbCrA x) noexcept
-		{
-		auto temp=reinterpret_cast<vec4&>(x); //I want to use it as a vec4!
-		temp-=vec4{0.0f,0.5f,0.5f,0.0f};
-		
-		auto v=vec4
-			{
-			 temp[2]*(1.0f - Kr)
-			,0.0f
-			,temp[1]*(1.0f - Kb)
-			,0.0f
-			};
-		m_data=2.0f*v + vec4{x.luma(),0.0f,x.luma(),x.alpha()};
-		m_data[1]=(x.luma() - Kr*m_data[0] - Kb*m_data[2])/Kg;
 		}
 	}
 

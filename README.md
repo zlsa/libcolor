@@ -7,21 +7,20 @@ This is a header-only C++ library for between different colorspaces. The type of
 The following colorspace conversions are implemented. In all cases the alpha value is untouched. Any hue component is returned in radians from 0 to 2&pi;. Other values goes from zero to one.
 
 
-| From\To 	| HCY'A 	| HCIA 	| HSLA 	| HSVA 	| RGBA 	| sRGBA 	| XYZA 	| Y'CbCrA 	|
-|---------	|-------	|------	|------	|------	|------	|-------	|------	|---------	|
-| HCY'A   	|       	| No   	| No   	| No   	| No   	| Yes   	| No   	| No      	|
-| HCIA    	| No    	|      	| No   	| No   	| Yes  	| No    	| No   	| No      	|
-| HSLA    	| No    	| No   	|      	| No   	| No   	| Yes   	| No   	| No      	|
-| HSVA    	| No    	| No   	| No   	|      	| No   	| Yes   	| No   	| No      	|
-| RGBA    	| No    	| Yes  	| No   	| No   	|      	| Yes   	| Yes  	| No      	|
-| sRGBA   	| Yes   	| No   	| Yes  	| Yes  	| Yes  	|       	| No   	| Yes     	|
-| XYZA    	| No    	| No   	| No   	| No   	| Yes  	| No    	|      	| No      	|
-| Y'CbCrA 	| No    	| No   	| No   	| No   	| No   	| Yes   	| No   	|         	|
+| From\To 	| HCYA 	| HCIA 	| HSLA 	| HSVA 	| RGBA 	| sRGBA 	| XYZA 	
+|---------	|------	|------	|------	|------	|------	|-------	|------	
+| HCYA   	|      	| No   	| No   	| No   	| Yes  	| No    	| No   	
+| HCIA    	| No   	|      	| No   	| No   	| Yes  	| No    	| No   	
+| HSLA    	| No   	| No   	|      	| No   	| No   	| Yes   	| No   	
+| HSVA    	| No   	| No   	| No   	|      	| No   	| Yes   	| No   	
+| RGBA    	| Yes  	| Yes  	| No   	| No   	|      	| Yes   	| Yes  	
+| sRGBA   	| No  	| No   	| Yes  	| Yes  	| Yes  	|       	| No   	
+| XYZA    	| No   	| No   	| No   	| No   	| Yes  	| No    	|      	
 
-To convert from XYZA to HCY'A you would do the following:
+To convert from XYZA to HSVA you would do the following:
 
     using namespace Color;
-    auto xyza=static_cast<HCYpA>( static_cast<SRGBA>( static_cast<RGBA>(color_in)));
+    auto hsva=static_cast<HSVA>( static_cast<SRGBA>( static_cast<RGBA>(color_in)));
     
 The reason for this three-step conversion is to avoid possible ambiguities and errors.
 
